@@ -52,7 +52,16 @@ to quickly create a Cobra application.`,
 		}
 		body := fetchweather()
 
-		fmt.Fprintf(os.Stdout, "Temp: %v\u00B0F Feel: %v Max: %v Min: %v\n", body.Main.Temp, body.Main.Feel, body.Main.TMax, body.Main.TMin)
+		var unit = '?'
+		if viper.GetString("units") == "imperial" {
+			unit = 'F'
+		} else if viper.GetString("units") == "metric" {
+			unit = 'C'
+		} else {
+			unit = 'K'
+		}
+		fmt.Fprintf(os.Stdout, "Temp: %v\u00B0%c Feel: %v\u00B0%c Max: %v\u00B0%c Min: %v\u00B0%c\n",
+			body.Main.Temp, unit, body.Main.Feel, unit, body.Main.TMax, unit, body.Main.TMin, unit)
 	},
 }
 
@@ -60,8 +69,8 @@ func fetchweather() (body util.WeatherAPI) {
 	wurl := viper.GetString("climateapiurl")
 	i, _ := url.Parse(wurl)
 	qry := i.Query()
-	qry.Add("lat", "44.9")
-	qry.Add("lon", "-93.2")
+	qry.Add("lat", fmt.Sprintf("%f", viper.GetFloat64("latitude")))
+	qry.Add("lon", fmt.Sprintf("%f", viper.GetFloat64("longitude")))
 	qry.Add("units", viper.GetString("units"))
 	qry.Add("appid", viper.GetString("climateapikey"))
 	i.RawQuery = qry.Encode()

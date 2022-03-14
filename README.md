@@ -24,6 +24,8 @@ So far this is what that configuration file looks like:
 {
   debugapp: false,
   units: "imperial",
+  latitude: 44.9778,
+  longitude: -93.2650,
   climateapiurl: "api.openweathermap.org/data/2.5/weather",
   climateapikey: "<openweathermap-api-key>"
 }
