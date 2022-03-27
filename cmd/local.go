@@ -22,12 +22,8 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/url"
 	"os"
-	"time"
 
 	"github.com/joshua-hansen/climate-go/util"
 
@@ -46,11 +42,10 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Fetching Local Weather Data...")
 		if viper.GetBool("debugapp") {
 			fmt.Fprintln(os.Stdout, "weather-api-key:", viper.Get("climateapikey"))
 		}
-		body := fetchweather()
+		res := fetchweather()
 
 		var unit = '?'
 		if viper.GetString("units") == "imperial" {
@@ -61,44 +56,15 @@ to quickly create a Cobra application.`,
 			unit = 'K'
 		}
 		fmt.Fprintf(os.Stdout, "Temp: %v\u00B0%c Feel: %v\u00B0%c Max: %v\u00B0%c Min: %v\u00B0%c\n",
-			body.Main.Temp, unit, body.Main.Feel, unit, body.Main.TMax, unit, body.Main.TMin, unit)
+			res.Main.Temp, unit, res.Main.Feel, unit, res.Main.TMax, unit, res.Main.TMin, unit)
 	},
 }
 
 func fetchweather() (body util.WeatherAPI) {
-	wurl := viper.GetString("climateapiurl")
-	i, _ := url.Parse(wurl)
-	qry := i.Query()
-	qry.Add("lat", fmt.Sprintf("%f", viper.GetFloat64("latitude")))
-	qry.Add("lon", fmt.Sprintf("%f", viper.GetFloat64("longitude")))
-	qry.Add("units", viper.GetString("units"))
-	qry.Add("appid", viper.GetString("climateapikey"))
-	i.RawQuery = qry.Encode()
-	wurl = i.String()
-
-	wc := http.Client{
-		Timeout: time.Second * 5,
-	}
-
-	req, err := http.NewRequest(http.MethodGet, wurl, nil)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Failed to create request:", err.Error())
-	}
-
-	res, err := wc.Do(req)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Failed to get request:", err.Error())
-	}
-
-	if res.Body != nil {
-		defer res.Body.Close()
-	}
-
-	decoder := json.NewDecoder(res.Body)
-	var data = util.WeatherAPI{}
-	decoder.Decode(&data)
-
-	return data
+	lat := viper.GetFloat64("latitude")
+	lon := viper.GetFloat64("longitude")
+	util.Log(fmt.Sprintf("Calling to fetch weather at lat: %f lon: %f ", lat, lon))
+	return util.FetchWeather(lat, lon)
 }
 
 func init() {
