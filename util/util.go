@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -52,16 +53,18 @@ func FetchWeather(lat, lon float64) (body WeatherAPI) {
 	return data
 }
 
-func FetchWeatherByZip(zip int) (body WeatherAPI) {
+func FetchWeatherByZip(zip, code string) (body WeatherAPI) {
 	Log("Building weather url query")
 	wurl := viper.GetString("climateapiurl")
 	i, _ := url.Parse(wurl)
 	qry := i.Query()
-	qry.Add("zip", fmt.Sprintf("%v", zip))
+	qry.Add("zip", fmt.Sprintf("%s,%s", zip, code))
 	qry.Add("units", viper.GetString("units"))
 	qry.Add("appid", viper.GetString("climateapikey"))
 	i.RawQuery = qry.Encode()
 	wurl = i.String()
+	wurl = strings.Replace(wurl, "%2C", ",", -1)
+	Log(wurl)
 
 	Log("Creating HTTP Client")
 	wc := http.Client{

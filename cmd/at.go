@@ -24,7 +24,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/joshua-hansen/climate-go/util"
 	"github.com/spf13/cobra"
@@ -54,7 +53,7 @@ var atCmd = &cobra.Command{
 			fmt.Println("Terminating....")
 			os.Exit(1)
 		}
-		var zip, _ = strconv.Atoi(args[0])
+		zip := args[0]
 		var code string
 		if len(args) == 2 {
 			code = args[1]
@@ -74,9 +73,9 @@ var atCmd = &cobra.Command{
 	},
 }
 
-func fetchweatherbyzip(zip int, code string) (body util.WeatherAPI) {
+func fetchweatherbyzip(zip, code string) (body util.WeatherAPI) {
 	util.Log(fmt.Sprintf("Calling to fetch weather at zip: %v and country: %v", zip, code))
-	return util.FetchWeatherByZip(zip)
+	return util.FetchWeatherByZip(zip, code)
 }
 
 func argIntegrityCheck(args []string) bool {
@@ -86,18 +85,16 @@ func argIntegrityCheck(args []string) bool {
 		fmt.Println("Please check inputs, refer to help section.")
 		pass = false
 	}
-	if _, err := strconv.Atoi(args[0]); err != nil {
-		fmt.Println("Please check zipcode is an integer")
-		pass = false
-	}
+
 	var c string
 	if argLen == 2 {
 		c = args[1]
 		if len(c) != 2 {
-			fmt.Println("Country code should be two characters")
+			fmt.Println("Country code should only be two characters")
 			pass = false
 		}
 	}
+
 	return pass
 }
 
